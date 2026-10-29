@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CodeAlpha — 3D Luxury Hotel Reservation System</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="/css/style.css">
+  
+  <!-- Three.js & OrbitControls CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+
+  <!-- ==========================================================================
+       SIGNATURE ANIMATION — CINEMATIC SHUTTER OPENING
+       ========================================================================== -->
+  <div id="shutter-container">
+    <div class="shutter-panel shutter-top"></div>
+    <div class="shutter-sweep"></div>
+    <div class="shutter-emblem-wrapper">
+      <div class="shutter-crest">α</div>
+      <div class="shutter-wordmark">CODEALPHA</div>
+      <div class="shutter-tagline">Signature Luxury Hospitality</div>
+    </div>
+    <div class="shutter-panel shutter-bottom"></div>
+  </div>
+
+  <!-- ==========================================================================
+       NAVIGATION BAR
+       ========================================================================== -->
+  <nav class="navbar">
+    <a href="javascript:void(0)" class="nav-brand" onclick="App.handleNavigation('home')">
+      <div class="brand-crest">α</div>
+      <div>
+        <span class="brand-name">CodeAlpha</span>
+        <span class="brand-subtitle">Hotels & Resorts</span>
+      </div>
+    </a>
+
+    <ul class="nav-links">
+      <li><a href="javascript:void(0)" class="nav-link active" data-nav="home">Home</a></li>
+      <li><a href="javascript:void(0)" class="nav-link" data-nav="explore">Explore Hotels</a></li>
+      <li><a href="javascript:void(0)" class="nav-link" data-nav="reservations">My Reservations</a></li>
+      <li><a href="javascript:void(0)" class="nav-link" data-nav="offers">Offers</a></li>
+      <li><a href="javascript:void(0)" class="nav-link" data-nav="help">Help</a></li>
+      <li id="nav-admin-link" style="display:none;">
+        <a href="javascript:void(0)" class="nav-link" data-nav="admin" style="color:#f3e5ab; font-weight:700;">★ Admin Console</a>
+      </li>
+    </ul>
+
+    <div class="nav-actions">
+      <div id="nav-user-badge" class="user-badge" style="display:none;">
+        <div id="user-menu-avatar" class="user-avatar">U</div>
+        <span id="user-menu-name">Julian Vance</span>
+        <a href="javascript:void(0)" onclick="App.handleLogout()" style="color:#fc8181; font-size:0.75rem; margin-left:0.5rem;" title="Sign out">Sign Out</a>
+      </div>
+
+      <button id="nav-login-btn" class="btn btn-outline-gold btn-sm" onclick="App.openAuthModal()">
+        Sign In / Demo
+      </button>
+    </div>
+  </nav>
+
+  <!-- ==========================================================================
+       VIEW CONTAINER: HOME / EXPLORE
+       ========================================================================== -->
+  <main id="home-view">
+    <!-- Hero Section -->
+    <header class="hero-section">
+      <div class="hero-background"></div>
+      <div class="hero-content">
+        <div class="hero-badge">✧ An Unmatched Standard of Elegance</div>
+        <h1 class="hero-title">Your Next Stay Begins Here.</h1>
+        <p class="hero-subtitle">
+          Discover exceptional stays, explore beautiful rooms, and reserve your perfect getaway.
+        </p>
+
+        <!-- Interactive Hotel Search Module -->
+        <div class="search-container">
+          <div class="search-grid">
+            <div class="search-field">
+              <label class="field-label" for="search-destination">Destination or Hotel</label>
+              <input type="text" id="search-destination" class="field-input" placeholder="e.g. Paris, Dubai, New York, Kyoto">
+            </div>
+
+            <div class="search-field">
+              <label class="field-label" for="search-checkin">Check-in Date</label>
+              <input type="date" id="search-checkin" class="field-input">
+            </div>
+
+            <div class="search-field">
+              <label class="field-label" for="search-checkout">Check-out Date</label>
+              <input type="date" id="search-checkout" class="field-input">
+            </div>
+
+            <div class="search-field">
+              <label class="field-label" for="search-guests">Guests & Rooms</label>
+              <select id="search-guests" class="field-select">
+                <option value="1">1 Adult • 1 Room</option>
+                <option value="2" selected>2 Adults • 1 Room</option>
+                <option value="3">3 Adults • 1 Room</option>
+                <option value="4">4 Adults • 2 Rooms</option>
+              </select>
+              <input type="hidden" id="search-rooms" value="1">
+            </div>
+
+            <button id="search-hotels-btn" class="btn btn-gold btn-lg">
+              Search Hotels
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Room Categories & 3D Showcase Section -->
+    <section id="showcase-section" class="section">
+      <div class="section-header">
+        <span class="section-tag">Distinctive Accommodations</span>
+        <h2 class="section-title">Explore Our Signature Suites</h2>
+        <p class="section-description">
+          Each residence is meticulously curated with custom furnishings, sensory acoustics, and interactive 3D spatial exploration.
+        </p>
+      </div>
+
+      <!-- Filter Tabs -->
+      <div class="filter-bar">
+        <button class="filter-btn active" data-filter="ALL">All Accommodations</button>
+        <button class="filter-btn" data-filter="STANDARD">Standard Rooms</button>
+        <button class="filter-btn" data-filter="DELUXE">Deluxe Rooms</button>
+        <button class="filter-btn" data-filter="SUITE">Luxury Suites</button>
+        <button class="filter-btn" data-filter="Paris">Paris</button>
+        <button class="filter-btn" data-filter="Dubai">Dubai</button>
+        <button class="filter-btn" data-filter="New York">New York</button>
+        <button class="filter-btn" data-filter="Kyoto">Kyoto</button>
+      </div>
+
+      <div id="rooms-search-status" style="text-align:center; margin-bottom:2rem; font-size:0.92rem; color:#a0aec0;"></div>
+
+      <!-- Rooms Grid -->
+      <div id="rooms-grid" class="rooms-grid">
+        <!-- Injected via JavaScript from database -->
+      </div>
+    </section>
+  </main>
+
+  <!-- ==========================================================================
+       VIEW CONTAINER: MY RESERVATIONS
+       ========================================================================== -->
+  <section id="reservations-view" class="section" style="display:none; padding-top:8rem;">
+    <div class="section-header">
+      <span class="section-tag">Guest Portfolio</span>
+      <h2 class="section-title">My Reservations</h2>
+      <p class="section-description">
+        Manage your confirmed itineraries, review simulated payments, or execute policy-based cancellations.
+      </p>
+    </div>
+
+    <div class="filter-bar" style="margin-bottom:2rem;">
+      <button class="filter-btn active" onclick="App.loadUserReservations('ALL')">All Bookings</button>
+      <button class="filter-btn" onclick="App.loadUserReservations('UPCOMING')">Upcoming Stays</button>
+      <button class="filter-btn" onclick="App.loadUserReservations('PAST')">Past Itineraries</button>
+      <button class="filter-btn" onclick="App.loadUserReservations('CANCELLED')">Cancelled</button>
+    </div>
+
+    <div id="user-reservations-list" class="reservations-container">
+      <!-- Injected via JS -->
+    </div>
+  </section>
+
+  <!-- ==========================================================================
+       VIEW CONTAINER: ADMIN CONSOLE
+       ========================================================================== -->
+  <section id="admin-view" class="section" style="display:none; padding-top:8rem;">
+    <div class="section-header">
+      <span class="section-tag">Executive Management</span>
+      <h2 class="section-title">Administrator Dashboard</h2>
+      <p class="section-description">
+        Real-time visibility over global property inventories, occupancy metrics, simulated transactions, and audit trails.
+      </p>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="admin-kpi-grid">
+      <div class="glass-card kpi-card">
+        <div class="kpi-label">Gross Confirmed Revenue</div>
+        <div id="admin-revenue" class="kpi-value">$0.00</div>
+      </div>
+      <div class="glass-card kpi-card">
+        <div class="kpi-label">Total Reservations</div>
+        <div id="admin-total-bookings" class="kpi-value">0</div>
+      </div>
+      <div class="glass-card kpi-card">
+        <div class="kpi-label">Average Occupancy</div>
+        <div id="admin-occupancy" class="kpi-value">0%</div>
+      </div>
+      <div class="glass-card kpi-card">
+        <div class="kpi-label">Active Cancellations</div>
+        <div id="admin-cancelled" class="kpi-value">0</div>
+      </div>
+    </div>
+
+    <!-- Searchable Reservations Table -->
+    <div class="glass-panel" style="padding:2rem; margin-bottom:3rem;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
+        <h3 class="font-serif">Reservation Master Registry</h3>
+        <input type="text" id="admin-search-input" placeholder="Search by reference or email..." class="form-control" style="max-width:320px;" oninput="App.loadAdminReservations(this.value)">
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Reference</th>
+              <th>Property & Category</th>
+              <th>Guest</th>
+              <th>Stay Dates</th>
+              <th>Total</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="admin-reservations-tbody">
+            <!-- Injected via JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- System Audit Log Table -->
+    <div class="glass-panel" style="padding:2rem;">
+      <h3 class="font-serif" style="margin-bottom:1.5rem;">System Audit Trail</h3>
+      <div style="overflow-x:auto;">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Action</th>
+              <th>Target Entity</th>
+              <th>User</th>
+              <th>Details</th>
+              <th>Timestamp</th>
+            </tr>
+          </thead>
+          <tbody id="admin-audit-tbody">
+            <!-- Injected via JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================================================
+       MODAL: AUTHENTICATION (Gmail, Mobile OTP, & Quick Demo Access)
+       ========================================================================== -->
+  <div id="auth-modal" class="modal-overlay">
+    <div class="glass-panel modal-container">
+      <button class="modal-close-btn">&times;</button>
+      <div style="text-align:center; margin-bottom:1.5rem;">
+        <div class="brand-crest" style="margin:0 auto 0.8rem;">α</div>
+        <h2 class="font-serif">Sign in to CodeAlpha</h2>
+        <p style="font-size:0.85rem; color:#a0aec0;">Select your preferred authentication option</p>
+      </div>
+
+      <!-- Auth Option Tabs -->
+      <div class="auth-tabs">
+        <button class="auth-tab-btn active" onclick="switchAuthTab('mobile')">Mobile Number</button>
+        <button class="auth-tab-btn" onclick="switchAuthTab('google')">Google OAuth</button>
+        <button class="auth-tab-btn" onclick="switchAuthTab('email')">Email Login</button>
+      </div>
+
+      <!-- Tab 1: Mobile Number OTP -->
+      <div id="auth-tab-mobile">
+        <div id="mobile-step-1">
+          <div class="form-group">
+            <label class="form-label" for="auth-mobile-input">Mobile Number (with Country Code)</label>
+            <input type="tel" id="auth-mobile-input" class="form-control" placeholder="+1 (555) 234-5678" value="+15552345678">
+          </div>
+          <button class="btn btn-gold" style="width:100%;" onclick="App.handleSendOtp()">
+            Send Verification Code
+          </button>
+          <div id="otp-status-message" style="margin-top:0.8rem; font-size:0.85rem;"></div>
+        </div>
+
+        <div id="mobile-step-2" style="display:none;">
+          <div class="form-group">
+            <label class="form-label" for="auth-name-input">Full Name (Optional)</label>
+            <input type="text" id="auth-name-input" class="form-control" placeholder="Julian Vance">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="auth-otp-input">6-Digit Verification Code</label>
+            <input type="text" id="auth-otp-input" class="form-control" placeholder="123456" maxlength="6">
+          </div>
+          <button class="btn btn-gold" style="width:100%; margin-bottom:0.8rem;" onclick="App.handleVerifyOtp()">
+            Verify Code & Enter
+          </button>
+          <button class="btn btn-ghost btn-sm" style="width:100%;" onclick="document.getElementById('mobile-step-1').style.display='block'; document.getElementById('mobile-step-2').style.display='none';">
+            Change Mobile Number
+          </button>
+        </div>
+      </div>
+
+      <!-- Tab 2: Google Sign-In -->
+      <div id="auth-tab-google" style="display:none; text-align:center;">
+        <p style="font-size:0.88rem; color:#a0aec0; margin-bottom:1.5rem;">
+          Authenticate securely using your Google Workspace or Personal Google account.
+        </p>
+        <a href="/oauth2/authorization/google" class="btn btn-outline-gold" style="width:100%; justify-content:center; margin-bottom:1rem;">
+          <svg width="20" height="20" viewBox="0 0 24 24" style="margin-right:0.5rem;"><path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.7 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.4l3.7 2.9C6.5 7.4 9 5 12 5z"/><path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.6h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5.1 3.7-8.9z"/><path fill="#FBBC05" d="M5.6 14.7c-.2-.7-.4-1.5-.4-2.3 0-.8.2-1.6.4-2.3L1.9 7.2C.7 9.6 0 12.2 0 15s.7 5.4 1.9 7.8l3.7-2.9z"/><path fill="#34A853" d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.4-6.4-5.3L1.9 16c1.8 3.8 5.6 6.4 10.1 6.4z"/></svg>
+          Continue with Google
+        </a>
+        <div style="font-size:0.75rem; color:#718096; margin-top:0.6rem;">
+          Note: If OAuth credentials are not configured in your environment, use the instant Demo Access below.
+        </div>
+      </div>
+
+      <!-- Tab 3: Email / Password -->
+      <form id="auth-tab-email" style="display:none;" onsubmit="App.handleEmailLogin(event)">
+        <div class="form-group">
+          <label class="form-label" for="login-email">Email Address</label>
+          <input type="email" id="login-email" class="form-control" placeholder="demo@codealpha.com" value="demo@codealpha.com" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="login-password">Password</label>
+          <input type="password" id="login-password" class="form-control" placeholder="••••••••" value="password123" required>
+        </div>
+        <button type="submit" class="btn btn-gold" style="width:100%;">
+          Sign In with Email
+        </button>
+      </form>
+
+      <!-- DEVELOPMENT DEMO QUICK ACCESS -->
+      <div style="margin-top:2rem; padding-top:1.5rem; border-top:1px solid rgba(255,255,255,0.08); text-align:center;">
+        <span style="font-size:0.72rem; letter-spacing:0.15em; text-transform:uppercase; color:#c5a880; display:block; margin-bottom:0.8rem;">
+          ⚡ Development Demo Quick Access
+        </span>
+        <div style="display:flex; gap:0.6rem; justify-content:center;">
+          <button class="btn btn-outline-gold btn-sm" onclick="App.handleDemoLogin('USER')">
+            Demo Traveler
+          </button>
+          <button class="btn btn-outline-gold btn-sm" onclick="App.handleDemoLogin('ADMIN')">
+            Demo Administrator
+          </button>
+        </div>
+      </div>
+
+      <div style="text-align:center; font-size:0.75rem; color:#718096; margin-top:1.5rem;">
+        By continuing, you acknowledge our 
+        <a href="javascript:void(0)" onclick="App.openPolicyModal('terms')">Terms and Conditions</a> and 
+        <a href="javascript:void(0)" onclick="App.openPolicyModal('privacy')">Privacy Policy</a>.
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       MODAL: 3D ROOM VIEWER (Three.js Interactive Explorer)
+       ========================================================================== -->
+  <div id="room-3d-modal" class="modal-overlay">
+    <div class="glass-panel modal-container modal-3d-container">
+      <button class="modal-close-btn">&times;</button>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+        <h3 id="modal-3d-title" class="font-serif">3D Interactive Suite Tour</h3>
+      </div>
+
+      <div class="room-3d-viewport">
+        <!-- Floating lighting toggles -->
+        <div class="viewer-controls-overlay">
+          <button class="viewer-pill" data-lighting="daylight">☀️ Daylight</button>
+          <button class="viewer-pill active" data-lighting="dusk">🌅 Golden Dusk</button>
+          <button class="viewer-pill" data-lighting="midnight">🌙 Midnight Luxe</button>
+        </div>
+
+        <div id="three-canvas-container"></div>
+        <div class="viewer-hint">Drag to rotate 360° • Scroll to zoom • Right-click to pan</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       MODAL: RESERVATION & SIMULATED CHECKOUT
+       ========================================================================== -->
+  <div id="booking-modal" class="modal-overlay">
+    <div class="glass-panel modal-container" style="max-width:650px;">
+      <button class="modal-close-btn">&times;</button>
+      
+      <div style="margin-bottom:1.5rem;">
+        <span style="font-size:0.75rem; color:#d4af37; text-transform:uppercase; letter-spacing:0.1em;">Reserve Accommodation</span>
+        <h2 id="booking-modal-title" class="font-serif" style="margin-top:0.2rem;">Deluxe Panorama Suite</h2>
+        <div id="booking-modal-hotel" style="font-size:0.85rem; color:#a0aec0;">CodeAlpha Grand Palace • Paris</div>
+      </div>
+
+      <!-- Live Server Price Summary -->
+      <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(212,175,55,0.2); border-radius:12px; padding:1.2rem; margin-bottom:1.5rem;">
+        <h4 style="font-size:0.85rem; color:#f3e5ab; text-transform:uppercase; margin-bottom:0.8rem; letter-spacing:0.05em;">Authorized Price Breakdown</h4>
+        <div style="display:flex; justify-content:space-between; font-size:0.88rem; margin-bottom:0.4rem; color:#cbd5e0;">
+          <span>Room Rate (<span id="quote-nights">4</span> Nights • <span id="quote-rooms">1</span> Room)</span>
+          <span id="quote-subtotal">$0.00</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:0.88rem; margin-bottom:0.4rem; color:#cbd5e0;">
+          <span>Sample Hospitality Tax (12%)</span>
+          <span id="quote-tax">$0.00</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:0.88rem; margin-bottom:0.4rem; color:#cbd5e0;">
+          <span>Resort Service Fee</span>
+          <span id="quote-fee">$0.00</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:1.15rem; font-weight:700; color:#f3e5ab; margin-top:0.6rem; padding-top:0.6rem; border-top:1px solid rgba(255,255,255,0.08);">
+          <span>Grand Total</span>
+          <span id="quote-total">$0.00 USD</span>
+        </div>
+      </div>
+
+      <!-- Guest Information -->
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label" for="booking-guest-name">Primary Guest Name</label>
+          <input type="text" id="booking-guest-name" class="form-control" required>
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label" for="booking-guest-email">Confirmation Email</label>
+          <input type="email" id="booking-guest-email" class="form-control" required>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1.2rem;">
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label" for="booking-guest-phone">Contact Phone</label>
+          <input type="tel" id="booking-guest-phone" class="form-control" required>
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label" for="booking-special-requests">Special Requests</label>
+          <input type="text" id="booking-special-requests" class="form-control" placeholder="e.g. High floor, late arrival">
+        </div>
+      </div>
+
+      <!-- Simulated Payment Section -->
+      <div style="background:rgba(212,175,55,0.06); border:1px solid rgba(212,175,55,0.25); border-radius:12px; padding:1.2rem; margin-bottom:1.5rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.8rem;">
+          <span style="font-size:0.75rem; font-weight:700; color:#d4af37; letter-spacing:0.1em; text-transform:uppercase;">
+            Payment Simulation (Development Mode)
+          </span>
+          <span style="font-size:0.7rem; background:#d4af37; color:#07090e; font-weight:700; padding:0.15rem 0.5rem; border-radius:10px;">TEST ONLY</span>
+        </div>
+        <p style="font-size:0.78rem; color:#cbd5e0; margin-bottom:0.8rem;">
+          <strong>SIMULATED PAYMENT — NO REAL MONEY WILL BE CHARGED.</strong> Fictional test instrument references are used.
+        </p>
+
+        <div style="display:grid; grid-template-columns:1.2fr 1fr; gap:1rem; margin-bottom:0.8rem;">
+          <div>
+            <label class="form-label" for="booking-payment-method">Simulated Method</label>
+            <select id="booking-payment-method" class="form-control">
+              <option value="CARD">Credit / Debit Card (Simulated)</option>
+              <option value="UPI">UPI Transfer (Simulated)</option>
+              <option value="PAY_AT_HOTEL">Pay at Hotel</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label" for="booking-simulated-outcome">Simulated Test Outcome</label>
+            <select id="booking-simulated-outcome" class="form-control">
+              <option value="SUCCESS">Payment Successful</option>
+              <option value="DECLINED">Payment Declined (Test)</option>
+              <option value="CANCELLED">Payment Cancelled (Test)</option>
+              <option value="TIMEOUT">Payment Timed Out (Test)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mandatory Terms Acceptance (Unchecked by default) -->
+      <div style="margin-bottom:1.5rem;">
+        <label class="form-checkbox-label">
+          <input type="checkbox" id="booking-terms-check" class="form-checkbox">
+          <span>
+            I have read and agree to the applicable 
+            <a href="javascript:void(0)" onclick="App.openPolicyModal('terms')">Terms and Conditions</a>, 
+            <a href="javascript:void(0)" onclick="App.openPolicyModal('privacy')">Privacy Policy</a>, and 
+            <a href="javascript:void(0)" onclick="App.openPolicyModal('terms')">Cancellation Policy</a>.
+          </span>
+        </label>
+      </div>
+
+      <button id="btn-confirm-reservation" class="btn btn-gold btn-lg" style="width:100%;" onclick="App.handleConfirmBooking()">
+        Authorize & Confirm Reservation
+      </button>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       MODAL: BOOKING CONFIRMATION & 3D SLEEPING BABY ANIMATION
+       ========================================================================== -->
+  <div id="sleeping-baby-modal" class="modal-overlay">
+    <div class="glass-panel modal-container baby-animation-container">
+      <button class="modal-close-btn">&times;</button>
+      
+      <div style="font-size:0.85rem; letter-spacing:0.2em; text-transform:uppercase; color:#d4af37; margin-bottom:0.3rem;">
+        ✧ Reservation Genuine Confirmation ✧
+      </div>
+      <h2 class="font-serif dream-message-title">Your Stay Is Confirmed!</h2>
+      
+      <div>
+        <span class="confirmation-booking-ref" id="confirmed-booking-ref">CA-2026-XXXXXX</span>
+      </div>
+
+      <!-- 3D Sleeping Baby Canvas -->
+      <div class="baby-canvas-wrapper">
+        <div id="baby-three-canvas"></div>
+      </div>
+
+      <div class="dream-message-title" style="font-size:1.6rem; color:#f3e5ab;">All booked. Time to dream.</div>
+      <p class="dream-message-sub">
+        Your reservation at <strong id="confirmed-hotel-name">CodeAlpha Grand Palace</strong> (<span id="confirmed-room-name">Suite</span>) is confirmed for <span id="confirmed-dates"></span>. Grand total: <strong id="confirmed-amount">$0.00</strong>.
+      </p>
+
+      <!-- Working Action Controls -->
+      <div class="baby-actions-grid">
+        <button class="btn btn-gold" onclick="App.closeModal(document.getElementById('sleeping-baby-modal')); App.handleNavigation('reservations');">
+          Go to My Reservations
+        </button>
+        <button class="btn btn-outline-gold" onclick="App.printVoucher()">
+          Download Booking Summary
+        </button>
+        <button class="btn btn-ghost" onclick="App.replayBabyAnimation()">
+          Replay Animation
+        </button>
+        <button class="btn btn-ghost" onclick="App.closeModal(document.getElementById('sleeping-baby-modal')); App.handleNavigation('home');">
+          Return to Home
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       MODAL: PRINTABLE CONFIRMATION VOUCHER
+       ========================================================================== -->
+  <div id="voucher-modal" class="modal-overlay">
+    <div class="glass-panel modal-container" style="max-width:700px;">
+      <button class="modal-close-btn">&times;</button>
+      <div class="print-voucher">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #d4af37; padding-bottom:1rem; margin-bottom:1.5rem;">
+          <div>
+            <h2 class="font-serif" style="color:#d4af37;">CODEALPHA</h2>
+            <div style="font-size:0.75rem; letter-spacing:0.2em; text-transform:uppercase; color:#a0aec0;">Hospitality Reservation Confirmation</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:0.75rem; color:#a0aec0;">Booking Reference</div>
+            <div id="voucher-ref" style="font-size:1.3rem; font-weight:700; color:#f3e5ab; font-family:'Playfair Display',serif;">CA-2026-XXXX</div>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-bottom:1.5rem; font-size:0.9rem;">
+          <div>
+            <div style="font-size:0.75rem; color:#a0aec0; text-transform:uppercase;">Hotel & Destination</div>
+            <strong id="voucher-hotel" style="font-size:1.1rem; color:#fff;">CodeAlpha Property</strong>
+            <div id="voucher-address" style="color:#a0aec0; font-size:0.82rem;">123 Rue de Luxury</div>
+          </div>
+          <div>
+            <div style="font-size:0.75rem; color:#a0aec0; text-transform:uppercase;">Room Classification</div>
+            <strong id="voucher-room" style="font-size:1.1rem; color:#fff;">Deluxe Panorama Suite</strong>
+          </div>
+        </div>
+
+        <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:1rem; margin-bottom:1.5rem; display:grid; grid-template-columns:repeat(4,1fr); gap:1rem; font-size:0.85rem; text-align:center;">
+          <div>
+            <div style="color:#a0aec0; font-size:0.75rem;">CHECK-IN</div>
+            <strong id="voucher-checkin">2026-11-01</strong>
+          </div>
+          <div>
+            <div style="color:#a0aec0; font-size:0.75rem;">CHECK-OUT</div>
+            <strong id="voucher-checkout">2026-11-05</strong>
+          </div>
+          <div>
+            <div style="color:#a0aec0; font-size:0.75rem;">DURATION</div>
+            <strong id="voucher-nights">4 Nights</strong>
+          </div>
+          <div>
+            <div style="color:#a0aec0; font-size:0.75rem;">OCCUPANCY</div>
+            <strong id="voucher-guests-count">2 Adults</strong>
+          </div>
+        </div>
+
+        <div style="margin-bottom:1.5rem; font-size:0.88rem;">
+          <div style="display:flex; justify-content:space-between; margin-bottom:0.3rem;">
+            <span style="color:#a0aec0;">Primary Registered Guest:</span>
+            <strong id="voucher-guest">Julian Vance</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:0.3rem;">
+            <span style="color:#a0aec0;">Guest Contact Email:</span>
+            <strong id="voucher-email">demo@codealpha.com</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:0.3rem;">
+            <span style="color:#a0aec0;">Payment Status:</span>
+            <strong id="voucher-payment" style="color:#68d391;">SUCCESS (SIMULATED)</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:0.3rem;">
+            <span style="color:#a0aec0;">Reservation Status:</span>
+            <strong id="voucher-status" style="color:#d4af37;">CONFIRMED</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between; margin-top:0.8rem; padding-top:0.6rem; border-top:1px solid rgba(255,255,255,0.08); font-size:1.1rem;">
+            <span>Total Amount Paid:</span>
+            <strong id="voucher-total" style="color:#f3e5ab;">$0.00 USD</strong>
+          </div>
+        </div>
+
+        <div style="font-size:0.75rem; color:#718096; border-top:1px dashed rgba(255,255,255,0.1); padding-top:1rem; margin-top:1rem; line-height:1.5;">
+          Cancellation Terms: Standard Flexible Policy applies. Free cancellation up to 48 hours prior to check-in. This document was generated by CodeAlpha Hotel Reservation System (Demonstration Mode).
+        </div>
+      </div>
+
+      <div style="margin-top:1.5rem; display:flex; justify-content:flex-end; gap:0.8rem;">
+        <button class="btn btn-gold btn-sm" onclick="App.printVoucher()">Print / Save PDF</button>
+        <button class="btn btn-ghost btn-sm" onclick="App.closeModal(document.getElementById('voucher-modal'))">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       MODAL: CANCELLATION CONFIRMATION
+       ========================================================================== -->
+  <div id="cancel-modal" class="modal-overlay">
+    <div class="glass-panel modal-container" style="max-width:500px;">
+      <button class="modal-close-btn">&times;</button>
+      <h3 class="font-serif" style="color:#fc8181; margin-bottom:0.8rem;">Cancel Reservation</h3>
+      <p style="font-size:0.9rem; color:#cbd5e0; margin-bottom:1rem;">
+        Are you sure you wish to cancel reservation <strong id="cancel-modal-ref" style="color:#fff;">CA-2026-XXXX</strong>?
+      </p>
+
+      <div style="background:rgba(229,62,62,0.1); border:1px solid rgba(229,62,62,0.3); border-radius:8px; padding:1rem; margin-bottom:1.2rem;">
+        <div style="font-size:0.8rem; color:#fc8181; text-transform:uppercase; font-weight:700;">Calculated Simulated Refund</div>
+        <div id="cancel-modal-refund" style="font-size:1.4rem; color:#fff; font-family:'Playfair Display',serif; margin:0.3rem 0;">$0.00</div>
+        <div style="font-size:0.78rem; color:#a0aec0;">
+          Based on the applicable cancellation policy: 100% room rate refunded if cancelled at least 48 hours before check-in.
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="cancel-reason-input">Reason for Cancellation</label>
+        <input type="text" id="cancel-reason-input" class="form-control" placeholder="e.g. Change in travel schedule">
+      </div>
+
+      <div style="display:flex; justify-content:flex-end; gap:0.8rem;">
+        <button class="btn btn-ghost btn-sm" onclick="App.closeModal(document.getElementById('cancel-modal'))">Keep Reservation</button>
+        <button id="cancel-confirm-btn" class="btn btn-danger btn-sm">Confirm Cancellation</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       MODAL: TERMS & PRIVACY POLICIES
+       ========================================================================== -->
+  <div id="policy-modal" class="modal-overlay">
+    <div class="glass-panel modal-container" style="max-width:700px;">
+      <button class="modal-close-btn">&times;</button>
+      <h3 id="policy-modal-title" class="font-serif" style="color:#f3e5ab; margin-bottom:1rem;">Policy Documentation</h3>
+      <div id="policy-modal-content" style="max-height:65vh; overflow-y:auto; padding-right:0.5rem;">
+        <!-- Injected via JS from /api/policy -->
+      </div>
+      <div style="margin-top:1.5rem; text-align:right;">
+        <button class="btn btn-gold btn-sm" onclick="App.closeModal(document.getElementById('policy-modal'))">I Understand</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       FOOTER
+       ========================================================================== -->
+  <footer class="footer">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="nav-brand">
+          <div class="brand-crest">α</div>
+          <span class="brand-name">CodeAlpha</span>
+        </div>
+        <p>
+          A refined luxury-hospitality booking platform with real-time room availability, interactive 3D spatial exploration, and transaction-safe reservation services.
+        </p>
+      </div>
+
+      <div>
+        <h4 class="footer-heading">Destinations</h4>
+        <ul class="footer-links">
+          <li><a href="javascript:void(0)" onclick="App.handleSearch('Paris')">Paris, France</a></li>
+          <li><a href="javascript:void(0)" onclick="App.handleSearch('Dubai')">Dubai, UAE</a></li>
+          <li><a href="javascript:void(0)" onclick="App.handleSearch('New York')">New York, USA</a></li>
+          <li><a href="javascript:void(0)" onclick="App.handleSearch('Kyoto')">Kyoto, Japan</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4 class="footer-heading">Legal & Compliance</h4>
+        <ul class="footer-links">
+          <li><a href="javascript:void(0)" onclick="App.openPolicyModal('terms')">Terms and Conditions</a></li>
+          <li><a href="javascript:void(0)" onclick="App.openPolicyModal('privacy')">Privacy Policy</a></li>
+          <li><a href="javascript:void(0)" onclick="App.openPolicyModal('terms')">Cancellation Policy</a></li>
+          <li><a href="javascript:void(0)" onclick="App.openPolicyModal('terms')">Payment Simulation Disclosure</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4 class="footer-heading">Hospitality Concierge</h4>
+        <p style="font-size:0.85rem; color:#a0aec0; margin-bottom:0.8rem;">
+          Our 24/7 guest relations team is dedicated to orchestrating every nuance of your journey.
+        </p>
+        <span style="color:#d4af37; font-size:0.85rem;">concierge@codealpha.hospitality.demo</span>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <div>© 2026 CodeAlpha. All rights reserved.</div>
+      <div>Designed for CodeAlpha Hospitality Platform • Java Full-Stack 3D Architecture</div>
+    </div>
+  </footer>
+
+  <script>
+    function switchAuthTab(tab) {
+      document.querySelectorAll('.auth-tab-btn').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+
+      document.getElementById('auth-tab-mobile').style.display = tab === 'mobile' ? 'block' : 'none';
+      document.getElementById('auth-tab-google').style.display = tab === 'google' ? 'block' : 'none';
+      document.getElementById('auth-tab-email').style.display = tab === 'email' ? 'block' : 'none';
+    }
+  </script>
+
+  <!-- Application Scripts -->
+  <script src="/js/room-3d.js"></script>
+  <script src="/js/sleeping-baby-3d.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>
+

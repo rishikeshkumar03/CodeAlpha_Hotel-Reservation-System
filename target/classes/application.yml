@@ -1,0 +1,52 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: codealpha-hotel-reservation
+  datasource:
+    url: jdbc:h2:file:./data/hoteldb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;AUTO_RECONNECT=TRUE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID:demo-google-client-id}
+            client-secret: ${GOOGLE_CLIENT_SECRET:demo-google-client-secret}
+            scope:
+              - openid
+              - profile
+              - email
+
+app:
+  jwt:
+    secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+    expiration-ms: 86400000
+  demo-mode: true
+  policy:
+    version: "v2026.1"
+  hotel:
+    default-tax-rate: 0.12
+    default-service-fee: 25.00
+    currency: "USD"
+
+logging:
+  level:
+    com.codealpha: INFO
+    org.springframework.security: WARN
+
